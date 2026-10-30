@@ -20,10 +20,8 @@ source is "user" or "untrusted".
 ### 1. Start the Server
 ```bash
 node src/server.js
-### 2. Start the Frontend
 ```bash
 npm run dev
-### 3. Open Dashboard
 Open `http://localhost:4000` in your web browser.
 
 ## Team
