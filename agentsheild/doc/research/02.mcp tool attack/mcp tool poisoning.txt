@@ -1,0 +1,5 @@
+A malicious MCP tool contains misleading instructions or behaviour that can manipulate an AI agent.
+Trusted MCP server registry.
+Tool metadata verification.
+Detection of unexpected tool definition changes.
+Approval of new or modified tools.
