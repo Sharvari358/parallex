@@ -3,260 +3,572 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SentinelPEP - AI Agent & Tool Security Gateway</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>SentinelPEP - Zero-Trust AI Agent & Tool Security Gateway</title>
+  
+  <!-- Modern Typography: Inter + JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons & Tailwind CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'monospace'],
+          },
+          colors: {
+            navy: {
+              950: '#070C18',
+              900: '#0B132B',
+              850: '#111C3D',
+              800: '#162244',
+              700: '#22325E',
+              600: '#32477E',
+            },
+            brand: {
+              50: '#F5F3FF',
+              100: '#EDE9FE',
+              200: '#DDD6FE',
+              500: '#8B5CF6',
+              600: '#7C3AED',
+              700: '#6D28D9',
+              900: '#4C1D95',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
   <style>
-    @keyframes pulse-slow { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
-    .pulse-amber { animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.35); border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.55); }
+    
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(0.98); }
+    }
+    .pulse-amber { animation: pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased">
-  <!-- Top Navigation -->
-  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50 px-6 py-4">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-          <i class="fa-solid fa-shield-halved text-white text-xl"></i>
+
+<body class="bg-[#F8FAFC] text-slate-800 min-h-screen font-sans antialiased selection:bg-purple-100 selection:text-purple-900 flex flex-col w-full">
+
+  <!-- ======================================================== -->
+  <!-- 1. Full-Width Top Header (Deep Navy Framework)           -->
+  <!-- ======================================================== -->
+  <header class="w-full bg-navy-900 text-white border-b border-navy-800 shadow-md sticky top-0 z-40">
+    <div class="w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex items-center justify-between">
+      
+      <!-- Brand & Description -->
+      <div class="flex items-center space-x-3.5">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-cyan-500 flex items-center justify-center shadow-md shadow-brand-600/30 text-white ring-1 ring-white/20 shrink-0">
+          <i class="fa-solid fa-shield-halved text-lg"></i>
         </div>
         <div>
-          <h1 class="text-lg font-bold tracking-tight text-white flex items-center gap-2">
-            Sentinel<span class="text-cyan-400">PEP</span>
-            <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800">MCP Security Gateway</span>
-          </h1>
-          <p class="text-xs text-slate-400">Policy Enforcement Point & Fail-Closed Boundary for Autonomous Agents</p>
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <span class="text-lg font-extrabold tracking-tight text-white flex items-center">
+              Sentinel<span class="text-brand-400 font-black">PEP</span>
+            </span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-brand-950/80 text-brand-300 border border-brand-700/60 tracking-wider uppercase">
+              AI Agent Security Gateway
+            </span>
+          </div>
+          <p class="text-xs text-slate-300 font-medium hidden md:block">
+            Zero-Trust Policy Enforcement Point & Cryptographic Audit Arbiter for Autonomous Agents
+          </p>
         </div>
       </div>
-      <div class="flex items-center space-x-4">
-        <button id="verifyIntegrityBtn" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-lg flex items-center gap-2 transition">
-          <i class="fa-solid fa-link text-cyan-400"></i>
-          <span>Verify Audit Chain</span>
-        </button>
-        <span id="systemStatusBadge" class="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-800 font-medium">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-          PEP Enforcing Active
+
+      <!-- Live Status & Verification Action -->
+      <div class="flex items-center space-x-3 sm:space-x-4 shrink-0">
+        <!-- Active Status Badge -->
+        <span id="systemStatusBadge" class="flex items-center gap-2 text-xs font-semibold px-3 py-1.5 rounded-full bg-emerald-950/90 text-emerald-300 border border-emerald-600/60 shadow-inner">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span class="tracking-wide hidden sm:inline">PEP Enforcing Active</span>
+          <span class="tracking-wide sm:hidden">Active</span>
         </span>
+
+        <!-- Verify Audit Chain Trigger Button -->
+        <button id="verifyIntegrityBtn" class="text-xs font-semibold bg-navy-800 hover:bg-navy-700 text-slate-100 hover:text-white border border-slate-700 hover:border-brand-500/80 px-3.5 py-1.5 rounded-xl flex items-center gap-2 transition duration-150 shadow-sm cursor-pointer">
+          <i class="fa-solid fa-link text-brand-400"></i>
+          <span class="hidden sm:inline">Verify Audit Chain</span>
+          <span class="sm:hidden">Verify</span>
+        </button>
       </div>
+
     </div>
   </header>
 
-  <!-- Main Container -->
-  <main class="max-w-7xl mx-auto px-6 py-6 space-y-6">
-    <!-- Scenarios Quick Run Bar -->
-    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm">
-      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 mb-3">
+  <!-- ======================================================== -->
+  <!-- 2. Main Dashboard Content (Full Available Screen Width)  -->
+  <!-- ======================================================== -->
+  <main class="flex-1 w-full max-w-[1720px] mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- ======================================================== -->
+    <!-- 2A. Security Benchmark Scenarios (5-Card Responsive Bar)  -->
+    <!-- ======================================================== -->
+    <section class="w-full bg-white border border-slate-200/90 rounded-2xl p-5 shadow-sm">
+      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
         <div>
-          <h2 class="text-sm font-semibold text-slate-200 flex items-center gap-2">
-            <i class="fa-solid fa-flask-vial text-cyan-400"></i>
-            Hackathon Security Benchmark Scenarios
-          </h2>
-          <p class="text-xs text-slate-400">Trigger simulated attack vectors and verify defensive boundary enforcement</p>
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded-md bg-brand-50 text-brand-600 flex items-center justify-center text-xs font-bold">
+              <i class="fa-solid fa-flask-vial"></i>
+            </div>
+            <h2 class="text-sm font-bold text-slate-900 tracking-tight">
+              Security Benchmark Scenarios (Built-in Attack Vectors)
+            </h2>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Evaluate zero-trust PEP defensive boundaries against indirect injection, privilege escalation, and high blast radius tool actions.
+          </p>
         </div>
-        <button id="runAllBtn" class="text-xs bg-cyan-600 hover:bg-cyan-500 text-white font-medium px-4 py-2 rounded-lg transition shadow flex items-center gap-2">
-          <i class="fa-solid fa-play"></i>
-          Run Full Test Suite
+
+        <button id="runAllBtn" class="text-xs bg-navy-900 hover:bg-navy-800 text-white font-semibold px-4 py-2 rounded-xl transition duration-150 shadow-sm hover:shadow flex items-center gap-2 border border-navy-700 cursor-pointer shrink-0">
+          <i class="fa-solid fa-play text-brand-400"></i>
+          <span>Run Full Benchmark Suite</span>
         </button>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5">
-        <button onclick="runScenario('scenario-1-legitimate')" class="scenario-btn p-3 rounded-lg bg-slate-950/70 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 text-left transition group">
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-xs font-semibold text-emerald-400">Scenario 1</span>
-            <span class="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-1.5 py-0.5 rounded">ALLOW</span>
+      <!-- Responsive 5-Card Grid: 1 col on mobile, 2 on sm, 3 on md, 5 on xl -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3.5 w-full">
+
+        <!-- Scenario 1: Legitimate Task -->
+        <button onclick="runScenario('scenario-1-legitimate')" class="scenario-btn p-4 rounded-xl bg-slate-50/80 hover:bg-white border border-slate-200 hover:border-emerald-400 hover:shadow-md text-left transition duration-200 group flex flex-col justify-between min-h-[145px] cursor-pointer">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-slate-700">Scenario 1</span>
+              <span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-full">ALLOW</span>
+            </div>
+            <div class="text-xs font-bold text-slate-900 group-hover:text-emerald-700 transition">Legitimate Task</div>
+            <div class="text-[11px] text-slate-500 mt-1 leading-snug">Reads support ticket_101.txt within permitted role scope.</div>
           </div>
-          <div class="text-xs font-medium text-slate-200 group-hover:text-cyan-300">Legitimate Task</div>
-          <div class="text-[10px] text-slate-400 truncate mt-0.5">Read ticket_101.txt</div>
+          <div class="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-400">
+            <span class="font-mono text-emerald-700 font-semibold flex items-center gap-1">
+              <i class="fa-regular fa-circle-check"></i> Benign Task
+            </span>
+            <i class="fa-solid fa-arrow-right text-slate-300 group-hover:text-emerald-600 group-hover:translate-x-0.5 transition"></i>
+          </div>
         </button>
 
-        <button onclick="runScenario('scenario-2-indirect-injection')" class="scenario-btn p-3 rounded-lg bg-slate-950/70 hover:bg-slate-800 border border-slate-800 hover:border-rose-900 text-left transition group">
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-xs font-semibold text-rose-400">Scenario 2</span>
-            <span class="text-[10px] bg-rose-950 text-rose-300 border border-rose-800 px-1.5 py-0.5 rounded">DENY</span>
+        <!-- Scenario 2: Indirect Prompt Injection -->
+        <button onclick="runScenario('scenario-2-indirect-injection')" class="scenario-btn p-4 rounded-xl bg-slate-50/80 hover:bg-white border border-slate-200 hover:border-rose-400 hover:shadow-md text-left transition duration-200 group flex flex-col justify-between min-h-[145px] cursor-pointer">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-slate-700">Scenario 2</span>
+              <span class="text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300 px-2.5 py-0.5 rounded-full">DENY</span>
+            </div>
+            <div class="text-xs font-bold text-slate-900 group-hover:text-rose-700 transition">Indirect Injection</div>
+            <div class="text-[11px] text-slate-500 mt-1 leading-snug">Poisoned invoice exfiltrates secrets via outbound webhook.</div>
           </div>
-          <div class="text-xs font-medium text-slate-200 group-hover:text-rose-300">Indirect Prompt Injection</div>
-          <div class="text-[10px] text-slate-400 truncate mt-0.5">Poisoned invoice exfiltration</div>
+          <div class="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-400">
+            <span class="font-mono text-rose-700 font-semibold flex items-center gap-1">
+              <i class="fa-solid fa-shield-virus"></i> OWASP LLM01
+            </span>
+            <i class="fa-solid fa-arrow-right text-slate-300 group-hover:text-rose-600 group-hover:translate-x-0.5 transition"></i>
+          </div>
         </button>
 
-        <button onclick="runScenario('scenario-3-privilege-escalation')" class="scenario-btn p-3 rounded-lg bg-slate-950/70 hover:bg-slate-800 border border-slate-800 hover:border-rose-900 text-left transition group">
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-xs font-semibold text-rose-400">Scenario 3</span>
-            <span class="text-[10px] bg-rose-950 text-rose-300 border border-rose-800 px-1.5 py-0.5 rounded">DENY</span>
+        <!-- Scenario 3: Privilege Escalation -->
+        <button onclick="runScenario('scenario-3-privilege-escalation')" class="scenario-btn p-4 rounded-xl bg-slate-50/80 hover:bg-white border border-slate-200 hover:border-rose-400 hover:shadow-md text-left transition duration-200 group flex flex-col justify-between min-h-[145px] cursor-pointer">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-slate-700">Scenario 3</span>
+              <span class="text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300 px-2.5 py-0.5 rounded-full">DENY</span>
+            </div>
+            <div class="text-xs font-bold text-slate-900 group-hover:text-rose-700 transition">Unauthorized Secrets</div>
+            <div class="text-[11px] text-slate-500 mt-1 leading-snug">SupportAgent attempts reading DATABASE_PASSWORD.</div>
           </div>
-          <div class="text-xs font-medium text-slate-200 group-hover:text-rose-300">Unauthorized Secrets</div>
-          <div class="text-[10px] text-slate-400 truncate mt-0.5">Read DATABASE_PASSWORD</div>
+          <div class="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-400">
+            <span class="font-mono text-rose-700 font-semibold flex items-center gap-1">
+              <i class="fa-solid fa-lock"></i> OWASP LLM06
+            </span>
+            <i class="fa-solid fa-arrow-right text-slate-300 group-hover:text-rose-600 group-hover:translate-x-0.5 transition"></i>
+          </div>
         </button>
 
-        <button onclick="runScenario('scenario-4-high-impact-approval')" class="scenario-btn p-3 rounded-lg bg-slate-950/70 hover:bg-slate-800 border border-slate-800 hover:border-amber-900 text-left transition group">
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-xs font-semibold text-amber-400">Scenario 4</span>
-            <span class="text-[10px] bg-amber-950 text-amber-300 border border-amber-800 px-1.5 py-0.5 rounded">APPROVAL</span>
+        <!-- Scenario 4: High-Impact Approval -->
+        <button onclick="runScenario('scenario-4-high-impact-approval')" class="scenario-btn p-4 rounded-xl bg-slate-50/80 hover:bg-white border border-slate-200 hover:border-amber-400 hover:shadow-md text-left transition duration-200 group flex flex-col justify-between min-h-[145px] cursor-pointer">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-slate-700">Scenario 4</span>
+              <span class="text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-0.5 rounded-full">APPROVAL</span>
+            </div>
+            <div class="text-xs font-bold text-slate-900 group-hover:text-amber-700 transition">High Blast Radius</div>
+            <div class="text-[11px] text-slate-500 mt-1 leading-snug">Outbound send_email paused for human operator sign-off.</div>
           </div>
-          <div class="text-xs font-medium text-slate-200 group-hover:text-amber-300">High-Impact Egress</div>
-          <div class="text-[10px] text-slate-400 truncate mt-0.5">Outbound send_email</div>
+          <div class="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-400">
+            <span class="font-mono text-amber-800 font-semibold flex items-center gap-1">
+              <i class="fa-solid fa-user-shield"></i> HITL Gate
+            </span>
+            <i class="fa-solid fa-arrow-right text-slate-300 group-hover:text-amber-600 group-hover:translate-x-0.5 transition"></i>
+          </div>
         </button>
 
-        <button onclick="runScenario('scenario-5-fail-closed')" class="scenario-btn p-3 rounded-lg bg-slate-950/70 hover:bg-slate-800 border border-slate-800 hover:border-rose-900 text-left transition group">
-          <div class="flex items-center justify-between mb-1">
-            <span class="text-xs font-semibold text-purple-400">Scenario 5</span>
-            <span class="text-[10px] bg-purple-950 text-purple-300 border border-purple-800 px-1.5 py-0.5 rounded">FAIL-CLOSED</span>
+        <!-- Scenario 5: Fail-Closed Boundary -->
+        <button onclick="runScenario('scenario-5-fail-closed')" class="scenario-btn p-4 rounded-xl bg-slate-50/80 hover:bg-white border border-slate-200 hover:border-purple-400 hover:shadow-md text-left transition duration-200 group flex flex-col justify-between min-h-[145px] cursor-pointer">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-slate-700">Scenario 5</span>
+              <span class="text-[10px] font-bold bg-purple-100 text-purple-900 border border-purple-300 px-2.5 py-0.5 rounded-full">FAIL-CLOSED</span>
+            </div>
+            <div class="text-xs font-bold text-slate-900 group-hover:text-purple-700 transition">Fail-Closed Arbiter</div>
+            <div class="text-[11px] text-slate-500 mt-1 leading-snug">Attempts access to restricted system path /etc/shadow.</div>
           </div>
-          <div class="text-xs font-medium text-slate-200 group-hover:text-purple-300">Fail-Closed Boundary</div>
-          <div class="text-[10px] text-slate-400 truncate mt-0.5">Access /etc/shadow file</div>
+          <div class="mt-3 pt-2 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-400">
+            <span class="font-mono text-purple-800 font-semibold flex items-center gap-1">
+              <i class="fa-solid fa-ban"></i> Zero-Trust
+            </span>
+            <i class="fa-solid fa-arrow-right text-slate-300 group-hover:text-purple-600 group-hover:translate-x-0.5 transition"></i>
+          </div>
         </button>
+
       </div>
-    </div>
+    </section>
 
-    <!-- Active Human-In-The-Loop Approval Banner (Dynamic) -->
-    <div id="approvalBanner" class="hidden bg-amber-950/40 border-2 border-amber-500/50 rounded-xl p-4 shadow-lg shadow-amber-500/10">
-      <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-lg bg-amber-900/60 flex items-center justify-center text-amber-400 pulse-amber">
-            <i class="fa-solid fa-hand text-xl"></i>
+    <!-- ======================================================== -->
+    <!-- 2B. Human-In-The-Loop (HITL) Alert Banner                -->
+    <!-- ======================================================== -->
+    <div id="approvalBanner" class="hidden w-full bg-amber-50 border-2 border-amber-400/90 rounded-2xl p-5 shadow-md transition duration-200">
+      <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+        
+        <div class="flex items-start sm:items-center gap-3.5">
+          <div class="w-11 h-11 rounded-xl bg-amber-500/20 text-amber-700 flex items-center justify-center text-xl shrink-0 pulse-amber border border-amber-400/60">
+            <i class="fa-solid fa-hand"></i>
           </div>
           <div>
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-bold text-amber-400 tracking-wide uppercase">Operator Confirmation Required</span>
-              <span id="approvalBlastBadge" class="text-[10px] bg-amber-900/80 text-amber-300 px-2 py-0.5 rounded font-mono">BLAST RADIUS: HIGH</span>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-amber-900">
+                Security Authorization Required (Human-In-The-Loop)
+              </span>
+              <span id="approvalBlastBadge" class="text-[10px] font-bold bg-amber-200 text-amber-900 px-2 py-0.5 rounded-md font-mono border border-amber-300">
+                BLAST RADIUS: HIGH
+              </span>
             </div>
-            <p id="approvalReasonText" class="text-sm font-medium text-slate-200 mt-0.5">Agent requested send_email to user@customer.com</p>
-            <p id="approvalDetailsText" class="text-xs text-slate-400 font-mono mt-0.5"></p>
+            <p id="approvalReasonText" class="text-sm font-semibold text-slate-900 mt-1">
+              Agent requested high-impact tool execution
+            </p>
+            <p id="approvalDetailsText" class="text-xs text-slate-600 font-mono mt-0.5 break-all">
+              Payload details will appear here.
+            </p>
           </div>
         </div>
-        <div class="flex items-center gap-2 w-full md:w-auto">
-          <button id="approveBtn" class="flex-1 md:flex-initial bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs px-4 py-2.5 rounded-lg transition shadow flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-check"></i> Approve Execution
+
+        <div class="flex items-center gap-2.5 w-full sm:w-auto shrink-0">
+          <button id="approveBtn" class="flex-1 sm:flex-initial bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs px-4 py-2.5 rounded-xl transition shadow-sm hover:shadow flex items-center justify-center gap-2 border border-emerald-500 cursor-pointer">
+            <i class="fa-solid fa-check"></i>
+            <span>Approve Execution</span>
           </button>
-          <button id="rejectBtn" class="flex-1 md:flex-initial bg-rose-600 hover:bg-rose-500 text-white font-medium text-xs px-4 py-2.5 rounded-lg transition shadow flex items-center justify-center gap-1.5">
-            <i class="fa-solid fa-xmark"></i> Reject & Block
+          <button id="rejectBtn" class="flex-1 sm:flex-initial bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs px-4 py-2.5 rounded-xl transition shadow-sm hover:shadow flex items-center justify-center gap-2 border border-rose-500 cursor-pointer">
+            <i class="fa-solid fa-xmark"></i>
+            <span>Reject & Drop</span>
           </button>
         </div>
+
       </div>
     </div>
 
-    <!-- Middle Grid: Agent Execution vs PEP Security Engine Inspector -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Left: Agent Live Execution Trace -->
-      <div class="bg-slate-900 border border-slate-800 rounded-xl flex flex-col h-[440px]">
-        <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <i class="fa-solid fa-robot text-indigo-400 text-sm"></i>
-            <span class="text-xs font-semibold text-slate-200">Agent Autonomous Execution Trace</span>
+    <!-- ======================================================== -->
+    <!-- 2C. Middle Grid: Execution Trace vs PEP Inspector        -->
+    <!-- ======================================================== -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 w-full">
+
+      <!-- LEFT: Agent Execution Trace Console (Deep Navy SOC Terminal) -->
+      <div class="w-full bg-navy-900 border border-navy-800 rounded-2xl flex flex-col h-[480px] shadow-sm overflow-hidden">
+        
+        <!-- Terminal Top Header -->
+        <div class="px-4 py-3 bg-navy-950 border-b border-navy-800 flex items-center justify-between select-none shrink-0">
+          <div class="flex items-center gap-2.5">
+            <div class="flex items-center space-x-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-rose-500/80 inline-block"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-500/80 inline-block"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500/80 inline-block"></span>
+            </div>
+            <span class="text-xs font-bold text-slate-200 tracking-tight ml-2 flex items-center gap-1.5">
+              <i class="fa-solid fa-terminal text-brand-400 text-[11px]"></i>
+              Agent Execution Trace Console
+            </span>
           </div>
-          <span id="agentStatusBadge" class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">IDLE</span>
+
+          <div class="flex items-center gap-2">
+            <button onclick="clearConsole()" title="Clear console output" class="text-[11px] text-slate-400 hover:text-slate-200 px-2 py-0.5 rounded bg-navy-850 hover:bg-navy-800 transition cursor-pointer">
+              <i class="fa-solid fa-eraser"></i> Clear
+            </button>
+            <span id="agentStatusBadge" class="text-[10px] font-mono font-bold bg-navy-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded uppercase">
+              IDLE
+            </span>
+          </div>
         </div>
-        <div id="agentTraceConsole" class="flex-1 p-4 overflow-y-auto space-y-2.5 font-mono text-xs text-slate-300">
-          <div class="text-slate-500 italic">Select a security scenario above or trigger a custom task to observe agent execution and PEP interception.</div>
+
+        <!-- Terminal Console Scroll Area -->
+        <div id="agentTraceConsole" class="flex-1 p-4 overflow-y-auto space-y-2.5 font-mono text-xs text-slate-300 bg-navy-900">
+          <div class="text-slate-500 italic p-4 text-center border border-dashed border-navy-800 rounded-xl my-6">
+            <i class="fa-solid fa-circle-play mb-1.5 text-base block text-brand-400"></i>
+            Click any security benchmark scenario above to trace autonomous agent execution & PEP policy enforcement.
+          </div>
         </div>
+
+        <!-- Terminal Footer / Status -->
+        <div class="px-4 py-2.5 bg-navy-950 border-t border-navy-800 flex items-center justify-between text-[11px] text-slate-400 shrink-0">
+          <span>Active Role: <strong class="text-slate-200">SupportAgent</strong></span>
+          <span class="text-slate-400 font-mono">Gateway Protocol: MCP JSON-RPC 2.0</span>
+        </div>
+
       </div>
 
-      <!-- Right: Policy Enforcement Point (PEP) Inspector -->
-      <div class="bg-slate-900 border border-slate-800 rounded-xl flex flex-col h-[440px]">
-        <div class="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
+      <!-- RIGHT: PEP Security Inspector & Decision Engine (Crisp White Card) -->
+      <div class="w-full bg-white border border-slate-200/90 rounded-2xl flex flex-col h-[480px] shadow-sm p-5 overflow-hidden">
+        
+        <!-- Inspector Header -->
+        <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-100 shrink-0">
           <div class="flex items-center gap-2">
-            <i class="fa-solid fa-crosshairs text-cyan-400 text-sm"></i>
-            <span class="text-xs font-semibold text-slate-200">PEP Security Interceptor & Decision Engine</span>
+            <div class="w-6 h-6 rounded-md bg-purple-50 text-purple-700 flex items-center justify-center text-xs font-bold">
+              <i class="fa-solid fa-crosshairs"></i>
+            </div>
+            <div>
+              <h3 class="text-sm font-bold text-slate-900">PEP Policy Engine Inspector</h3>
+              <p class="text-[11px] text-slate-500">Real-time gatekeeper verdict, defensive telemetry & arguments</p>
+            </div>
           </div>
-          <span id="pepDecisionBadge" class="text-xs font-bold px-2.5 py-0.5 rounded uppercase">STANDBY</span>
+          <span id="pepDecisionBadge" class="text-xs font-extrabold px-3 py-1 rounded-full uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200 shadow-sm">
+            STANDBY
+          </span>
         </div>
 
-        <div class="flex-1 p-4 overflow-y-auto space-y-4 text-xs">
+        <div class="flex-1 overflow-y-auto space-y-3.5 pr-1">
+          
           <!-- Decision Summary Card -->
-          <div id="decisionCard" class="p-3.5 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+          <div id="decisionCard" class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 transition">
             <div class="flex items-center justify-between">
-              <span class="text-slate-400 text-[11px]">Primary Decision</span>
-              <span id="cardDecisionText" class="font-bold text-slate-200">No active interception</span>
+              <span class="text-slate-500 text-[11px] font-bold uppercase tracking-wider">Gatekeeper Verdict</span>
+              <span id="cardDecisionText" class="font-bold text-xs text-slate-700">No active interception</span>
             </div>
-            <div class="text-slate-300 font-sans" id="cardReasonText">
-              The PEP evaluates static RBAC rules, semantic intent drift, taint propagation from untrusted documents, and applies fail-closed arbitration.
-            </div>
-          </div>
-
-          <!-- Defensive Metrics -->
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-              <div class="text-[10px] text-slate-400">Rule Triggered</div>
-              <div id="statRuleId" class="text-xs font-mono font-semibold text-cyan-400 mt-0.5 truncate">-</div>
-            </div>
-            <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-              <div class="text-[10px] text-slate-400">Blast Radius</div>
-              <div id="statBlast" class="text-xs font-mono font-semibold text-slate-200 mt-0.5">-</div>
-            </div>
-            <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-              <div class="text-[10px] text-slate-400">Taint Score</div>
-              <div id="statTaint" class="text-xs font-mono font-semibold text-slate-200 mt-0.5">0.00</div>
-            </div>
-            <div class="p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-              <div class="text-[10px] text-slate-400">Confidence</div>
-              <div id="statConfidence" class="text-xs font-mono font-semibold text-slate-200 mt-0.5">-</div>
+            <div class="text-xs text-slate-600 font-medium leading-relaxed" id="cardReasonText">
+              The PEP intercepts agent tool calls to evaluate role-based tool whitelists, semantic drift, indirect taint propagation, and enforces fail-closed arbitration.
             </div>
           </div>
 
-          <!-- Tool Payload Detail -->
+          <!-- Defensive Metrics (4 Key Gauges) -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            
+            <!-- Metric 1: Rule Triggered -->
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/90 flex flex-col justify-between">
+              <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Rule Code</div>
+              <div id="statRuleId" class="text-xs font-mono font-bold text-brand-700 mt-1 truncate" title="RULE-STANDARD">
+                -
+              </div>
+              <div class="text-[10px] text-slate-400 mt-1">Policy Matrix</div>
+            </div>
+
+            <!-- Metric 2: Blast Radius -->
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/90 flex flex-col justify-between">
+              <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Blast Radius</div>
+              <div id="statBlast" class="text-xs font-mono font-bold text-slate-800 mt-1">
+                -
+              </div>
+              <div class="text-[10px] text-slate-400 mt-1">Impact Level</div>
+            </div>
+
+            <!-- Metric 3: Taint Score -->
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/90 flex flex-col justify-between">
+              <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Taint Score</div>
+              <div id="statTaint" class="text-xs font-mono font-bold text-slate-800 mt-1">
+                0.00
+              </div>
+              <div class="w-full bg-slate-200 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                <div id="taintProgressBar" class="bg-rose-500 h-full w-0 transition-all duration-300"></div>
+              </div>
+            </div>
+
+            <!-- Metric 4: Confidence Score -->
+            <div class="p-3 rounded-xl bg-slate-50 border border-slate-200/90 flex flex-col justify-between">
+              <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Confidence</div>
+              <div id="statConfidence" class="text-xs font-mono font-bold text-slate-800 mt-1">
+                -
+              </div>
+              <div class="w-full bg-slate-200 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                <div id="confProgressBar" class="bg-brand-600 h-full w-0 transition-all duration-300"></div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Intercepted Tool Payload Inspector -->
           <div>
-            <div class="text-[11px] font-semibold text-slate-400 mb-1">Intercepted Tool Call & Arguments</div>
-            <pre id="toolPayloadView" class="p-2.5 bg-slate-950 border border-slate-800 rounded font-mono text-[11px] text-cyan-300 overflow-x-auto max-h-32">{\n  "status": "waiting_for_invocation"\n}</pre>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                Intercepted Tool Call & Arguments
+              </span>
+              <button onclick="copyToolPayload()" class="text-[10px] text-brand-600 hover:text-brand-800 font-semibold flex items-center gap-1 transition cursor-pointer">
+                <i class="fa-regular fa-copy"></i> Copy Payload
+              </button>
+            </div>
+            <pre id="toolPayloadView" class="p-3 bg-navy-950 text-brand-200 border border-navy-800 rounded-xl font-mono text-[11px] leading-relaxed overflow-x-auto max-h-36 shadow-inner select-all">{\n  "status": "waiting_for_invocation"\n}</pre>
           </div>
+
         </div>
+
       </div>
+
     </div>
 
-    <!-- Cryptographic Audit Log Explorer -->
-    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
-      <div class="flex items-center justify-between mb-3">
-        <div class="flex items-center gap-2">
-          <i class="fa-solid fa-list-check text-slate-400 text-sm"></i>
-          <h3 class="text-xs font-semibold text-slate-200">Immutable Cryptographic Audit Trail (SHA-256 Hash Chain)</h3>
+    <!-- ======================================================== -->
+    <!-- 2D. Cryptographic Audit Trail Explorer (Full Width)      -->
+    <!-- ======================================================== -->
+    <section class="w-full bg-white border border-slate-200/90 rounded-2xl p-5 shadow-sm">
+      
+      <!-- Table Header & Controls -->
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
+        <div>
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 rounded-md bg-indigo-50 text-indigo-700 flex items-center justify-center text-xs font-bold">
+              <i class="fa-solid fa-cubes"></i>
+            </div>
+            <h3 class="text-sm font-bold text-slate-900 tracking-tight">
+              Cryptographic Tamper-Evident Audit Trail
+            </h3>
+            <span class="text-[10px] font-mono font-semibold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full border border-slate-200">
+              SHA-256 Hash Chain
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 mt-0.5">
+            Immutable cryptographic ledger logging every policy verification, payload hash, and gatekeeper verdict.
+          </p>
         </div>
-        <div class="flex items-center gap-2">
-          <button onclick="fetchAuditLogs()" class="text-xs text-slate-400 hover:text-slate-200 px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 transition">
-            <i class="fa-solid fa-rotate-right"></i> Refresh
+
+        <div class="flex items-center gap-2 self-end sm:self-auto shrink-0">
+          <!-- Filter Buttons -->
+          <div class="inline-flex rounded-lg border border-slate-200 bg-slate-50 p-0.5 text-xs">
+            <button onclick="filterLogs('ALL')" id="filterBtnAll" class="px-2.5 py-1 rounded-md font-semibold text-slate-800 bg-white shadow-xs transition cursor-pointer">All</button>
+            <button onclick="filterLogs('ALLOW')" id="filterBtnAllow" class="px-2.5 py-1 rounded-md font-semibold text-slate-600 hover:text-slate-800 transition cursor-pointer">Allow</button>
+            <button onclick="filterLogs('DENY')" id="filterBtnDeny" class="px-2.5 py-1 rounded-md font-semibold text-slate-600 hover:text-slate-800 transition cursor-pointer">Deny</button>
+            <button onclick="filterLogs('REQUIRE_APPROVAL')" id="filterBtnApproval" class="px-2.5 py-1 rounded-md font-semibold text-slate-600 hover:text-slate-800 transition cursor-pointer">HITL</button>
+          </div>
+
+          <button onclick="fetchAuditLogs()" title="Refresh Logs" class="text-xs text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 font-semibold transition flex items-center gap-1.5 border border-slate-200 cursor-pointer">
+            <i class="fa-solid fa-rotate-right"></i>
+            <span class="hidden md:inline">Refresh</span>
           </button>
         </div>
       </div>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs border-collapse">
+      <!-- Responsive Audit Table with Horizontal Scroll -->
+      <div class="w-full overflow-x-auto rounded-xl border border-slate-200/80">
+        <table class="w-full min-w-[700px] text-left text-xs border-collapse">
           <thead>
-            <tr class="border-b border-slate-800 text-slate-400 text-[11px]">
-              <th class="py-2 px-3">Timestamp</th>
-              <th class="py-2 px-3">Tool</th>
-              <th class="py-2 px-3">Agent Role</th>
-              <th class="py-2 px-3">Decision</th>
-              <th class="py-2 px-3">Reason / Rule</th>
-              <th class="py-2 px-3">SHA-256 Current Hash</th>
+            <tr class="bg-slate-50/90 border-b border-slate-200 text-slate-600 font-bold text-[11px] uppercase tracking-wider">
+              <th class="py-3 px-3.5">Timestamp</th>
+              <th class="py-3 px-3.5">Tool Invocation</th>
+              <th class="py-3 px-3.5">Agent Role</th>
+              <th class="py-3 px-3.5">Verdict</th>
+              <th class="py-3 px-3.5">Reason / Policy Code</th>
+              <th class="py-3 px-3.5">SHA-256 Hash</th>
             </tr>
           </thead>
-          <tbody id="auditTableBody" class="divide-y divide-slate-800/60 font-mono text-[11px]">
+          <tbody id="auditTableBody" class="divide-y divide-slate-100 font-mono text-[11px] bg-white">
             <tr>
-              <td colspan="6" class="py-4 text-center text-slate-500 font-sans">No audit events recorded yet.</td>
+              <td colspan="6" class="py-8 text-center text-slate-400 font-sans">
+                <i class="fa-solid fa-spinner fa-spin text-brand-600 text-lg mb-2 block"></i>
+                Loading security audit records...
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
-    </div>
+
+    </section>
+
   </main>
 
-  <!-- Interactive JavaScript logic -->
+  <!-- ======================================================== -->
+  <!-- 3. Cryptographic Verification Modal Dialog               -->
+  <!-- ======================================================== -->
+  <div id="verifyModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/60 backdrop-blur-sm">
+    <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-xl space-y-4 text-left">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div id="verifyModalIcon" class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl shrink-0">
+            <i class="fa-solid fa-shield-check"></i>
+          </div>
+          <div>
+            <h4 class="text-sm font-bold text-slate-900">Cryptographic Chain Verification</h4>
+            <p class="text-xs text-slate-500">SHA-256 Tamper-Evidence Validation</p>
+          </div>
+        </div>
+        <button onclick="closeVerifyModal()" class="text-slate-400 hover:text-slate-600 text-lg p-1 cursor-pointer">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="verifyModalContent" class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2 text-xs">
+        <!-- Dynamically injected via JavaScript -->
+      </div>
+
+      <div class="flex justify-end pt-2">
+        <button onclick="closeVerifyModal()" class="bg-navy-900 hover:bg-navy-800 text-white font-semibold text-xs px-4 py-2 rounded-xl transition cursor-pointer">
+          Dismiss
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- 4. Interactive JavaScript Logic (Completely Preserved)   -->
+  <!-- ======================================================== -->
   <script>
     let activeApprovalId = null;
+    let cachedAuditLogs = [];
+    let currentFilter = 'ALL';
 
+    // 1. Run Benchmark Scenario
     async function runScenario(scenarioId) {
-      updateConsole([{ stepType: 'SYSTEM', message: `Initializing benchmark scenario: ${scenarioId}...` }]);
+      updateConsole([{ 
+        stepType: 'SYSTEM', 
+        message: `[INIT] Executing benchmark attack vector: ${scenarioId}...` 
+      }]);
+      
+      const agentBadge = document.getElementById('agentStatusBadge');
+      if (agentBadge) {
+        agentBadge.textContent = 'EVALUATING';
+        agentBadge.className = 'text-[10px] font-mono font-bold bg-brand-900 text-brand-200 border border-brand-700 px-2 py-0.5 rounded uppercase';
+      }
+
       try {
         const res = await fetch('/api/scenarios/run', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ scenarioId })
         });
+        
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        
         const data = await res.json();
         renderExecution(data);
-        fetchAuditLogs();
-        checkPendingApprovals();
+        await fetchAuditLogs();
+        await checkPendingApprovals();
       } catch (err) {
         alert('Failed to execute scenario: ' + err.message);
+      } finally {
+        if (agentBadge) {
+          agentBadge.textContent = 'COMPLETED';
+          agentBadge.className = 'text-[10px] font-mono font-bold bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded uppercase';
+        }
       }
     }
 
+    // 2. Run All Benchmark Scenarios Sequentially
     document.getElementById('runAllBtn').addEventListener('click', async () => {
       const scenarios = [
         'scenario-1-legitimate',
@@ -265,12 +577,24 @@
         'scenario-4-high-impact-approval',
         'scenario-5-fail-closed'
       ];
-      for (const id of scenarios) {
-        await runScenario(id);
-        await new Promise(r => setTimeout(r, 600));
+      
+      const btn = document.getElementById('runAllBtn');
+      const originalHtml = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-brand-400"></i><span>Running Benchmarks...</span>';
+
+      try {
+        for (const id of scenarios) {
+          await runScenario(id);
+          await new Promise(r => setTimeout(r, 650));
+        }
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHtml;
       }
     });
 
+    // 3. Render Execution Trace & PEP Inspector Telemetry
     function renderExecution(data) {
       const agentResult = data.agentResult || {};
       const traces = agentResult.executionTrace || [];
@@ -281,52 +605,82 @@
 
       traces.forEach(t => {
         const row = document.createElement('div');
-        row.className = 'py-1 border-b border-slate-800/40';
+        row.className = 'py-1.5 px-2 rounded-lg hover:bg-navy-850/60 transition border-b border-navy-800/40';
 
-        let badgeColor = 'bg-slate-800 text-slate-300';
-        if (t.stepType === 'PEP_DECISION') badgeColor = t.decision === 'ALLOW' ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-rose-950 text-rose-300 border border-rose-800';
-        if (t.stepType === 'AGENT_COMPROMISED') badgeColor = 'bg-amber-950 text-amber-300 border border-amber-800';
-        if (t.stepType === 'EXECUTION_BLOCKED') badgeColor = 'bg-rose-950 text-rose-300 font-bold';
+        let badgeColor = 'bg-navy-800 text-slate-300 border border-slate-700';
+        if (t.stepType === 'PEP_DECISION') {
+          badgeColor = t.decision === 'ALLOW' 
+            ? 'bg-emerald-950 text-emerald-300 border border-emerald-700' 
+            : 'bg-rose-950 text-rose-300 border border-rose-700';
+        } else if (t.stepType === 'AGENT_COMPROMISED') {
+          badgeColor = 'bg-amber-950 text-amber-300 border border-amber-700';
+        } else if (t.stepType === 'EXECUTION_BLOCKED') {
+          badgeColor = 'bg-rose-950 text-rose-300 font-bold border border-rose-600';
+        } else if (t.stepType === 'AGENT_INTENT') {
+          badgeColor = 'bg-brand-950 text-brand-300 border border-brand-700';
+        }
+
+        const timeStr = t.timestamp ? (t.timestamp.includes('T') ? t.timestamp.split('T')[1].split('.')[0] : t.timestamp) : '--:--:--';
 
         row.innerHTML = `
-          <div class="flex items-center gap-2 mb-0.5">
-            <span class="text-[9px] ${badgeColor} px-1.5 py-0.5 rounded font-mono">${t.stepType}</span>
-            <span class="text-[10px] text-slate-500">${t.timestamp.split('T')[1].split('.')[0]}</span>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-[9px] font-bold ${badgeColor} px-1.5 py-0.5 rounded font-mono">${t.stepType || 'STEP'}</span>
+            <span class="text-[10px] text-slate-500 font-mono">${timeStr}</span>
           </div>
-          <div class="text-slate-200 font-sans">${escapeHtml(t.message)}</div>
+          <div class="text-slate-200 font-sans text-xs pl-0.5 leading-relaxed">${escapeHtml(t.message)}</div>
         `;
         consoleEl.appendChild(row);
       });
       consoleEl.scrollTop = consoleEl.scrollHeight;
 
-      // Update PEP Card
+      // Update PEP Card Verdict
       const verdict = agentResult.verdict || 'STANDBY';
       const badge = document.getElementById('pepDecisionBadge');
       badge.textContent = verdict;
 
+      const cardDecision = document.getElementById('cardDecisionText');
+      const decisionCard = document.getElementById('decisionCard');
+
       if (verdict === 'ALLOW') {
-        badge.className = 'text-xs font-bold px-2.5 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800';
-        document.getElementById('cardDecisionText').textContent = 'ALLOW (Passed Safety Verification)';
-        document.getElementById('cardDecisionText').className = 'font-bold text-emerald-400';
+        badge.className = 'text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider bg-emerald-100 text-emerald-800 border border-emerald-300';
+        cardDecision.textContent = 'ALLOW (Passed Safety Verification)';
+        cardDecision.className = 'font-bold text-xs text-emerald-700';
+        decisionCard.className = 'p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200 space-y-1.5 transition';
       } else if (verdict === 'DENY') {
-        badge.className = 'text-xs font-bold px-2.5 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800';
-        document.getElementById('cardDecisionText').textContent = 'DENY (Security Violation Blocked)';
-        document.getElementById('cardDecisionText').className = 'font-bold text-rose-400';
+        badge.className = 'text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-300';
+        cardDecision.textContent = 'DENY (Security Violation Blocked)';
+        cardDecision.className = 'font-bold text-xs text-rose-700';
+        decisionCard.className = 'p-3.5 rounded-xl bg-rose-50/70 border border-rose-200 space-y-1.5 transition';
       } else if (verdict === 'REQUIRE_APPROVAL') {
-        badge.className = 'text-xs font-bold px-2.5 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800';
-        document.getElementById('cardDecisionText').textContent = 'REQUIRE_APPROVAL (High Blast Radius)';
-        document.getElementById('cardDecisionText').className = 'font-bold text-amber-400';
+        badge.className = 'text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300';
+        cardDecision.textContent = 'REQUIRE_APPROVAL (High Blast Radius)';
+        cardDecision.className = 'font-bold text-xs text-amber-800';
+        decisionCard.className = 'p-3.5 rounded-xl bg-amber-50/70 border border-amber-200 space-y-1.5 transition';
+      } else {
+        badge.className = 'text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200';
+        cardDecision.textContent = 'No active interception';
+        cardDecision.className = 'font-bold text-xs text-slate-700';
+        decisionCard.className = 'p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5 transition';
       }
 
       document.getElementById('cardReasonText').textContent = agentResult.finalReason || (verdict === 'ALLOW' ? 'Task executed within permitted policy profile.' : 'Action suspended pending human authorization.');
       document.getElementById('statRuleId').textContent = agentResult.ruleId || 'RULE-STANDARD';
       
-      // Look for latest PEP decision in trace
+      // Extract latest PEP decision metrics from traces
       const pepDecision = [...traces].reverse().find(t => t.stepType === 'PEP_DECISION');
       if (pepDecision) {
-        document.getElementById('statBlast').textContent = pepDecision.blastRadius || 'LOW';
-        document.getElementById('statTaint').textContent = (pepDecision.taintScore || 0).toFixed(2);
-        document.getElementById('statConfidence').textContent = ((pepDecision.confidence || 0.95) * 100).toFixed(0) + '%';
+        const blast = pepDecision.blastRadius || 'LOW';
+        document.getElementById('statBlast').textContent = blast;
+        
+        const taint = (pepDecision.taintScore || 0);
+        document.getElementById('statTaint').textContent = taint.toFixed(2);
+        const taintBar = document.getElementById('taintProgressBar');
+        if (taintBar) taintBar.style.width = `${Math.min(100, Math.round(taint * 100))}%`;
+
+        const conf = pepDecision.confidence !== undefined ? pepDecision.confidence : 0.95;
+        document.getElementById('statConfidence').textContent = `${Math.round(conf * 100)}%`;
+        const confBar = document.getElementById('confProgressBar');
+        if (confBar) confBar.style.width = `${Math.min(100, Math.round(conf * 100))}%`;
       }
 
       const intentStep = [...traces].find(t => t.stepType === 'AGENT_INTENT');
@@ -338,6 +692,7 @@
       }
     }
 
+    // 4. Poll and Handle Pending Human Approvals (HITL)
     async function checkPendingApprovals() {
       try {
         const res = await fetch('/api/approvals');
@@ -349,8 +704,8 @@
           const req = pending[0];
           activeApprovalId = req.id;
           banner.classList.remove('hidden');
-          document.getElementById('approvalReasonText').textContent = `Agent requesting tool '${req.toolName}' (${req.reason})`;
-          document.getElementById('approvalDetailsText').textContent = `Payload: ${JSON.stringify(req.toolArgs)}`;
+          document.getElementById('approvalReasonText').textContent = `Agent requesting tool '${req.toolName}' (${req.reason || 'High blast radius'})`;
+          document.getElementById('approvalDetailsText').textContent = `Arguments: ${JSON.stringify(req.toolArgs)}`;
         } else {
           banner.classList.add('hidden');
           activeApprovalId = null;
@@ -358,89 +713,214 @@
       } catch (err) {}
     }
 
+    // Approve Execution Button
     document.getElementById('approveBtn').addEventListener('click', async () => {
       if (!activeApprovalId) return;
-      await fetch(`/api/approvals/${activeApprovalId}/decide`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ decision: 'APPROVE', operatorNotes: 'Authorized by security admin' })
-      });
-      checkPendingApprovals();
-      fetchAuditLogs();
-    });
-
-    document.getElementById('rejectBtn').addEventListener('click', async () => {
-      if (!activeApprovalId) return;
-      await fetch(`/api/approvals/${activeApprovalId}/decide`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ decision: 'REJECT', operatorNotes: 'Rejected by security admin' })
-      });
-      checkPendingApprovals();
-      fetchAuditLogs();
-    });
-
-    async function fetchAuditLogs() {
       try {
-        const res = await fetch('/api/audit-logs?limit=15');
-        const data = await res.json();
-        const tbody = document.getElementById('auditTableBody');
-        tbody.innerHTML = '';
-
-        if (!data.logs || data.logs.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="py-4 text-center text-slate-500 font-sans">No audit events recorded yet.</td></tr>';
-          return;
-        }
-
-        data.logs.forEach(log => {
-          const tr = document.createElement('tr');
-          tr.className = 'hover:bg-slate-800/40 transition';
-
-          let decBadge = 'bg-slate-800 text-slate-300';
-          if (log.decision === 'ALLOW') decBadge = 'bg-emerald-950 text-emerald-400 border border-emerald-800';
-          if (log.decision === 'DENY') decBadge = 'bg-rose-950 text-rose-400 border border-rose-800';
-          if (log.decision === 'REQUIRE_APPROVAL') decBadge = 'bg-amber-950 text-amber-400 border border-amber-800';
-
-          tr.innerHTML = `
-            <td class="py-2.5 px-3 text-slate-400">${log.timestamp.split('T')[1].split('.')[0]}</td>
-            <td class="py-2.5 px-3 font-semibold text-slate-200">${log.toolName}</td>
-            <td class="py-2.5 px-3 text-slate-400">${log.agentRole}</td>
-            <td class="py-2.5 px-3"><span class="px-1.5 py-0.5 rounded text-[10px] ${decBadge}">${log.decision}</span></td>
-            <td class="py-2.5 px-3 text-slate-300 max-w-xs truncate" title="${escapeHtml(log.reason)}">${escapeHtml(log.reason)}</td>
-            <td class="py-2.5 px-3 text-cyan-400 font-mono text-[10px] truncate max-w-[120px]" title="${log.currentHash}">${log.currentHash.slice(0, 12)}...</td>
-          `;
-          tbody.appendChild(tr);
+        await fetch(`/api/approvals/${activeApprovalId}/decide`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ decision: 'APPROVE', operatorNotes: 'Authorized by security admin' })
         });
-      } catch (err) {}
-    }
-
-    document.getElementById('verifyIntegrityBtn').addEventListener('click', async () => {
-      const res = await fetch('/api/audit-logs/verify');
-      const data = await res.json();
-      if (data.valid) {
-        alert(`Cryptographic Chain Verified: SHA-256 chain is valid across all ${data.totalEntries} entries! No tampering detected.`);
-      } else {
-        alert('Tampering detected: ' + data.reason);
+        await checkPendingApprovals();
+        await fetchAuditLogs();
+      } catch (err) {
+        alert('Approval failed: ' + err.message);
       }
     });
+
+    // Reject Execution Button
+    document.getElementById('rejectBtn').addEventListener('click', async () => {
+      if (!activeApprovalId) return;
+      try {
+        await fetch(`/api/approvals/${activeApprovalId}/decide`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ decision: 'REJECT', operatorNotes: 'Blocked by security admin' })
+        });
+        await checkPendingApprovals();
+        await fetchAuditLogs();
+      } catch (err) {
+        alert('Rejection failed: ' + err.message);
+      }
+    });
+
+    // 5. Fetch & Filter Audit Logs
+    async function fetchAuditLogs() {
+      try {
+        const res = await fetch('/api/audit-logs?limit=30');
+        const data = await res.json();
+        cachedAuditLogs = data.logs || [];
+        renderAuditTable();
+      } catch (err) {
+        console.error('Audit fetch failed', err);
+      }
+    }
+
+    function filterLogs(filterType) {
+      currentFilter = filterType;
+      
+      const buttons = {
+        'ALL': document.getElementById('filterBtnAll'),
+        'ALLOW': document.getElementById('filterBtnAllow'),
+        'DENY': document.getElementById('filterBtnDeny'),
+        'REQUIRE_APPROVAL': document.getElementById('filterBtnApproval')
+      };
+
+      Object.entries(buttons).forEach(([key, btn]) => {
+        if (!btn) return;
+        if (key === filterType) {
+          btn.className = 'px-2.5 py-1 rounded-md font-semibold text-slate-800 bg-white shadow-xs transition cursor-pointer';
+        } else {
+          btn.className = 'px-2.5 py-1 rounded-md font-semibold text-slate-600 hover:text-slate-800 transition cursor-pointer';
+        }
+      });
+
+      renderAuditTable();
+    }
+
+    function renderAuditTable() {
+      const tbody = document.getElementById('auditTableBody');
+      tbody.innerHTML = '';
+
+      let logs = cachedAuditLogs;
+      if (currentFilter !== 'ALL') {
+        logs = logs.filter(l => l.decision === currentFilter);
+      }
+
+      if (!logs || logs.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-slate-400 font-sans">No audit events matching criteria.</td></tr>';
+        return;
+      }
+
+      logs.forEach(log => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50/80 transition duration-150';
+
+        let decBadge = 'bg-slate-100 text-slate-700 border border-slate-200';
+        if (log.decision === 'ALLOW') decBadge = 'bg-emerald-100 text-emerald-800 border border-emerald-300';
+        if (log.decision === 'DENY') decBadge = 'bg-rose-100 text-rose-800 border border-rose-300';
+        if (log.decision === 'REQUIRE_APPROVAL') decBadge = 'bg-amber-100 text-amber-900 border border-amber-300';
+
+        const timeStr = log.timestamp ? (log.timestamp.includes('T') ? log.timestamp.split('T')[1].split('.')[0] : log.timestamp) : '--:--:--';
+        const shortHash = log.currentHash ? log.currentHash.slice(0, 10) + '...' : '-';
+
+        tr.innerHTML = `
+          <td class="py-2.5 px-3.5 text-slate-500 font-mono">${timeStr}</td>
+          <td class="py-2.5 px-3.5 font-bold text-slate-800">${escapeHtml(log.toolName || '-')}</td>
+          <td class="py-2.5 px-3.5 text-slate-600 font-sans">${escapeHtml(log.agentRole || '-')}</td>
+          <td class="py-2.5 px-3.5">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${decBadge}">
+              ${log.decision}
+            </span>
+          </td>
+          <td class="py-2.5 px-3.5 text-slate-700 font-sans max-w-xs truncate" title="${escapeHtml(log.reason || '')}">
+            ${escapeHtml(log.reason || '-')}
+          </td>
+          <td class="py-2.5 px-3.5 text-brand-700 font-mono text-[10px]">
+            <span class="inline-flex items-center gap-1 bg-brand-50 border border-brand-200 px-1.5 py-0.5 rounded cursor-pointer hover:bg-brand-100 transition" onclick="copyHash('${log.currentHash}')" title="Click to copy full SHA-256 hash: ${log.currentHash}">
+              <i class="fa-solid fa-cube text-[9px]"></i>
+              ${shortHash}
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 6. Cryptographic Chain Integrity Verification
+    document.getElementById('verifyIntegrityBtn').addEventListener('click', async () => {
+      try {
+        const res = await fetch('/api/audit-logs/verify');
+        const data = await res.json();
+        
+        const modal = document.getElementById('verifyModal');
+        const content = document.getElementById('verifyModalContent');
+        const icon = document.getElementById('verifyModalIcon');
+
+        if (data.valid) {
+          icon.className = 'w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center text-xl shrink-0';
+          icon.innerHTML = '<i class="fa-solid fa-shield-check"></i>';
+          
+          content.innerHTML = `
+            <div class="flex items-center gap-2 text-emerald-700 font-bold">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Cryptographic Chain Valid & Tamper-Evident</span>
+            </div>
+            <p class="text-slate-600 mt-1">
+              All <strong>${data.totalEntries}</strong> sequential blocks verified successfully via SHA-256 hash chaining.
+            </p>
+            <div class="pt-2 border-t border-slate-200 flex justify-between text-slate-500 font-mono text-[10px]">
+              <span>Verified Entries: ${data.totalEntries}</span>
+              <span>Broken Links: 0</span>
+            </div>
+          `;
+        } else {
+          icon.className = 'w-10 h-10 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center text-xl shrink-0';
+          icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+          
+          content.innerHTML = `
+            <div class="flex items-center gap-2 text-rose-700 font-bold">
+              <i class="fa-solid fa-circle-xmark"></i>
+              <span>Integrity Violation Detected</span>
+            </div>
+            <p class="text-slate-600 mt-1">
+              Tampering identified at entry #${data.brokenAtIndex}: ${escapeHtml(data.reason)}
+            </p>
+          `;
+        }
+        
+        modal.classList.remove('hidden');
+      } catch (err) {
+        alert('Verification endpoint error: ' + err.message);
+      }
+    });
+
+    function closeVerifyModal() {
+      document.getElementById('verifyModal').classList.add('hidden');
+    }
+
+    // 7. Utility Functions
+    function clearConsole() {
+      const consoleEl = document.getElementById('agentTraceConsole');
+      consoleEl.innerHTML = '<div class="text-slate-500 italic p-3 text-center border border-dashed border-navy-800 rounded-xl my-4">Console cleared. Run a benchmark scenario above to generate traces.</div>';
+    }
 
     function updateConsole(items) {
       const consoleEl = document.getElementById('agentTraceConsole');
       consoleEl.innerHTML = '';
       items.forEach(t => {
         const div = document.createElement('div');
-        div.className = 'text-slate-400';
+        div.className = 'text-brand-300 font-mono py-1';
         div.textContent = t.message;
         consoleEl.appendChild(div);
       });
     }
 
-    function escapeHtml(str) {
-      if (!str) return '';
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    function copyToolPayload() {
+      const text = document.getElementById('toolPayloadView').textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Intercepted tool payload copied to clipboard.');
+      });
     }
 
-    // Auto-refresh periodically
+    function copyHash(hash) {
+      if (!hash) return;
+      navigator.clipboard.writeText(hash).then(() => {
+        alert('SHA-256 hash copied to clipboard:\n' + hash);
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    // Initialize & Periodic Polls
     fetchAuditLogs();
     checkPendingApprovals();
     setInterval(checkPendingApprovals, 3000);
