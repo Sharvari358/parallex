@@ -68,15 +68,28 @@ export class SemanticGuard {
     const argsString = JSON.stringify(toolArgs || {}).toLowerCase();
 
     // Check 1: Did tainted content propagate into an exfiltration or communication tool?
-    if (taintResult?.isTainted && (toolName === 'send_external_webhook' || toolName === 'send_email')) {
-      return {
-        decision: Decision.DENY,
-        reason: `Indirect Prompt Injection Alert: Tainted data from '${taintResult.taintedSource}' was redirected into external communication tool '${toolName}'.`,
-        ruleId: 'RULE-SEMANTIC-INJECTION-EXFILTRATION',
-        blastRadius: BlastRadius.CRITICAL,
-        confidence: 0.97,
-        riskFactor: RiskFactors.INDIRECT_INJECTION
-      };
+    if (taintResult?.isTainted) {
+      if (toolName === 'send_external_webhook' || taintResult.taintScore >= 0.9) {
+        return {
+          decision: Decision.DENY,
+          reason: `Indirect Prompt Injection Alert: High-risk tainted data from '${taintResult.taintedSource}' was redirected into exfiltration channel '${toolName}'.`,
+          ruleId: 'RULE-SEMANTIC-INJECTION-EXFILTRATION',
+          blastRadius: BlastRadius.CRITICAL,
+          confidence: 0.97,
+          riskFactor: RiskFactors.INDIRECT_INJECTION
+        };
+      }
+
+      if (toolName === 'send_email') {
+        return {
+          decision: Decision.REQUIRE_APPROVAL,
+          reason: `Untrusted Origin Egress: Action requested from untrusted source '${taintResult.taintedSource}' involves high-blast communication '${toolName}'. Operator authorization required.`,
+          ruleId: 'RULE-UNTRUSTED-HITL-REQUIRED',
+          blastRadius: BlastRadius.HIGH,
+          confidence: 0.95,
+          riskFactor: RiskFactors.TAINT_PROPAGATION
+        };
+      }
     }
 
     // Check 2: Secret scanning in outgoing arguments
