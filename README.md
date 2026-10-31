@@ -17,12 +17,15 @@ check(action, args, source) returns:
 source is "user" or "untrusted".
 
 ## How to Run
-### 1. Start the Server
+ 1. Start the Server
 ```bash
 node src/server.js
 ```bash
 npm run dev
 Open `http://localhost:4000` in your web browser.
+ or
+https://parallex-roan.vercel.app/ 
+open this website
 
 ## Team
 - Sharvari N Prasad
